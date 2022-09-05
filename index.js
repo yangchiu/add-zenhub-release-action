@@ -2,6 +2,11 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 const axios = require('axios').default;
 
+Date.prototype.addDays = function(days) {
+  var date = new Date(this.valueOf());
+  date.setDate(date.getDate() + days);
+  return date;
+}
 
 async function getReleaseIdFromReleaseName(repo_id, release_name) {
   const url = `https://api.zenhub.com/p1/repositories/${repo_id}/reports/releases`
@@ -18,7 +23,7 @@ async function createRelease(repo_id,
                              release_name, 
                              description='', 
                              start_date=new Date().toISOString(), 
-                             desired_end_date=add(new Date(),{ days: 14 }).toISOString()) {
+                             desired_end_date=new Date().addDays(14).toISOString()) {
   const url = `https://api.zenhub.com/p1/repositories/${repo_id}/reports/releases`
   const response = await axios.post(url, {
     title: release_name,

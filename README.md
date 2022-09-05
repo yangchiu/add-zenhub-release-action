@@ -25,6 +25,6 @@ Add an issue to Zenhub release. If the realase doesn't exist, it would be create
 uses: yangchiu/add-zenhub-release-action@master
 with:
   zenhub_token: ${{ secrets.ZENHUB_TOKEN }}
-  repo_id: ${{ github.repository.id }}
-  issue_number: ${{ github.event.issue.issue_number }}
-  release_name: v1.4.0
+  repo_id: ${{ fromJSON(steps.repo.outputs.data).id }}
+  issue_number: ${{ github.event.issue.id }}
+  release_name: 1.4.0
