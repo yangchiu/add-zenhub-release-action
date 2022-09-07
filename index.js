@@ -10,15 +10,20 @@ Date.prototype.addDays = function(days) {
 }
 
 async function getReleaseIdFromReleaseName(repo_id, release_name) {
-  console.log(`==> get release id from release name:`)
-  const url = `https://api.zenhub.com/p1/repositories/${repo_id}/reports/releases`
+
+  const url = `https://api.zenhub.com/p1/repositories/${repo_id}/reports/releases`;
+  console.log(`==> get release id from release name: ${url}`);
+
   const response = await axios.get(url);
-  console.log(`Get releases: ${inspect(response)}`);
+  console.log(`Get releases: ${inspect(response.data)}`);
+
   for (const release of response.data) {
-    console.log(`Iterate release ${inspect(release)}`)
-    if (release.title === release_name) return release.release_id
+    if (release.title === release_name) {
+      console.log(`Found ${inspect(release)} for ${release_name}!`);
+      return release.release_id;
+    }
   }
-  return null
+  return null;
 }
 
 async function createRelease(repo_id, 
@@ -26,31 +31,34 @@ async function createRelease(repo_id,
                              description='', 
                              start_date=new Date().toISOString(), 
                              desired_end_date=new Date().addDays(14).toISOString()) {
-  console.log(`==> create release:`)
-  const url = `https://api.zenhub.com/p1/repositories/${repo_id}/reports/release`
-  const response = await axios.post(url, {
+
+  const url = `https://api.zenhub.com/p1/repositories/${repo_id}/reports/release`;
+  const body = {
     title: release_name,
     description: description,
     start_date: start_date,
     desired_end_date: desired_end_date
-  });
-  console.log(`Create release: ${inspect(response)}`);
+  };
+  console.log(`==> create release: ${url} ${inspect(body)}`);
+
+  const response = await axios.post(url, body);
+  console.log(`Create release succeed: ${inspect(response.data)}`);
   return response.data.release_id;
 }
 
 async function addIssueToRelease(repo_id, release_id, issue_number) {
-  console.log(`==> add issue to release:`)
-  const url = `https://api.zenhub.com/p1/reports/release/${release_id}/issues`
-  console.log(url);
+
+  const url = `https://api.zenhub.com/p1/reports/release/${release_id}/issues`;
   const body = {
     'add_issues': [
       { 'repo_id': repo_id * 1, 'issue_number': issue_number * 1 }
     ],
     'remove_issues': []
   };
-  console.log(body);
+  console.log(`==> add issue to release: ${url} ${inspect(body)}`);
+
   const response = await axios.patch(url, body);
-  console.log(`Add issue to release: ${inspect(response)}`);
+  console.log(`Add issue to release OK: ${inspect(response.data)}`);
 }
 
 async function run() {
@@ -77,7 +85,7 @@ async function run() {
     let release_id = ''
     release_id = await getReleaseIdFromReleaseName(repo_id, release_name);
     if (!release_id) {
-      console.log(`Release ${release_name} doesn't exist, create a new one`)
+      console.log(`Release ${release_name} doesn't exist, create a new one`);
       release_id = await createRelease(repo_id, release_name);
       if (!release_id) throw Error('expect release_id but it\s null!');  
     }
